@@ -3,80 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='my.css') }}">
     <title>Speech-to-Speech Chatbot</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 50px;
-            display: flex;
-            justify-content: space-between;
-        }
-      
-        .container {
-            width: 45%;
-            text-align: center;
-        }
-
-        button {
-            padding: 10px 20px;
-            margin: 10px;
-            border-color: rgb(71, 152, 227);
-            color: rgb(71, 152, 227);
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: rgb(71, 152, 227);
-            color: #fff
-        }
-
-        #usersaid {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            min-height: 50px;
-        }
-
-        #response {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            min-height: 50px;
-        }
-
-        audio {
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
-    <!-- Left side: User's speech input -->
-    <div class="container">
-        <h2>Hey Let's Talk...</h2>
-        <button onclick="startRecording()">Ask Your Doubt</button>
-        <div id="usersaid">You said: <span id="transcript"></span></div>
-    </div>
+    <div class="chat-container">
+        <h2>Hey, Let's Talk...</h2>
 
-    <!-- Right side: AI's response -->
-    <div class="container">
-        <h2>AI Response</h2>
-        <button onclick="generateResponse()">Generate</button>
-        <div id="response"></div>
+        <div class="chat-area" id="chatArea"></div>
+
+        <div class="button-container">
+            <button onclick="startRecording()">Ask Your Doubt</button>
+            <button onclick="generateResponse()">Generate</button>
+        </div>
+        
         <audio id="audioResponse" controls style="display: none;"></audio>
     </div>
 
     <script>
         let userSpeech = "";
 
-        // Function to start recording speech
         function startRecording() {
             if (!('webkitSpeechRecognition' in window)) {
-                alert("Your browser doesn't support speech recognition. Please try Chrome.");
+                alert("browser not support");
                 return;
             }
 
@@ -87,7 +36,7 @@
 
             recognition.onresult = function(event) {
                 userSpeech = event.results[0][0].transcript;
-                document.getElementById("transcript").innerText = userSpeech;
+                addUserMessage(userSpeech);
             };
 
             recognition.onerror = function(event) {
@@ -97,20 +46,27 @@
             recognition.start();
         }
 
-        // Function to send speech to backend and get AI response
+        function addUserMessage(message) {
+            const chatArea = document.getElementById("chatArea");
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.className = "user-message";
+            userMessageDiv.innerText = message;
+            chatArea.appendChild(userMessageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight; 
+        }
+
         async function generateResponse() {
             if (userSpeech === "") {
                 alert("Please record your speech first.");
                 return;
             }
 
-            // Send speech to the backend with instruction
             const response = await fetch('/generate-response', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ speech: userSpeech, instruction: "Don't provide asterisks. Only give a short response to the users speech" })
+                body: JSON.stringify({ speech: userSpeech })
             });
 
             const data = await response.json();
@@ -121,8 +77,7 @@
                 const aiTextResponse = data.response;
                 const audioUrl = data.audio_url;
 
-                // Display AI response text
-                document.getElementById("response").innerText = aiTextResponse;
+                addAIMessage(aiTextResponse);
 
                 // Play the generated speech response
                 const audioElement = document.getElementById("audioResponse");
@@ -130,6 +85,15 @@
                 audioElement.src = audioUrl;
                 audioElement.play();
             }
+        }
+
+        function addAIMessage(message) {
+            const chatArea = document.getElementById("chatArea");
+            const aiMessageDiv = document.createElement("div");
+            aiMessageDiv.className = "ai-message";
+            aiMessageDiv.innerText = message;
+            chatArea.appendChild(aiMessageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight; // Scroll to the bottom
         }
     </script>
 </body>

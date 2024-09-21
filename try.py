@@ -3,6 +3,7 @@ import google.generativeai as genai
 from gtts import gTTS
 import os
 from uuid import uuid4
+import playsound
 
 app = Flask(__name__)
 
@@ -16,13 +17,15 @@ def index():
 @app.route('/generate-response', methods=['POST'])
 
 def generate_response():
+    
     try:
         data = request.json
         user_speech = data['speech']
+    
         prompt = (
-            "Respond to the current user's response "
-            " Do not use asterisks. Give a short and simple response.\n"
-            f"Current User's Response: {user_speech}\n"
+            f'''Respond to the current user's response given in user_speech"
+            Do not use asterisks. Give a short and simple response.\n
+            {user_speech}\n'''
            
         )
         model = genai.GenerativeModel("gemini-1.5-flash")
@@ -33,7 +36,8 @@ def generate_response():
         file_name = f"response_{uuid4()}.mp3"
         file_path = os.path.join("static", file_name)
         tts.save(file_path)
-
+        
+        # return playsound.playsound(f"/static/{file_name}")
         
         return jsonify({
             "response": ai_text_response,
