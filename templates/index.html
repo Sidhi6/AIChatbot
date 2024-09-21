@@ -25,18 +25,21 @@
 
         function startRecording() {
             if (!('webkitSpeechRecognition' in window)) {
-                alert("browser not support");
+                alert("Your browser doesn't support speech recognition. Please try Chrome.");
                 return;
             }
 
             const recognition = new webkitSpeechRecognition();
             recognition.lang = "en-US";
-            recognition.interimResults = true;
+            recognition.interimResults = true; // To get real-time results but wait for final result
             recognition.maxAlternatives = 1;
 
             recognition.onresult = function(event) {
-                userSpeech = event.results[0][0].transcript;
-                addUserMessage(userSpeech);
+                const result = event.results[event.results.length - 1];
+                if (result.isFinal) {
+                    userSpeech = result[0].transcript;  // Store the final recognized speech
+                    addUserMessage(userSpeech);  // Display the final message at once
+                }
             };
 
             recognition.onerror = function(event) {

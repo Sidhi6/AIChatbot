@@ -13,17 +13,18 @@ genai.configure(api_key=api_key)
 @app.route('/')
 def index():
     return render_template('index.html')
+user_previous_responses=[]
 
 @app.route('/generate-response', methods=['POST'])
-
 def generate_response():
     
     try:
         data = request.json
         user_speech = data['speech']
+        user_previous_responses.append(user_speech)
     
         prompt = (
-            f'''Respond to the current user's response given in user_speech"
+            f'''Respond to the current user's response given in user_speech keeping in mind the previous history given in {user_previous_responses}"
             Do not use asterisks. Give a short and simple response.\n
             {user_speech}\n'''
            
