@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech-to-Speech Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            width: 45%;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border-color: rgb(71, 152, 227);
+            color: rgb(71, 152, 227);
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: rgb(71, 152, 227);
+            color: #fff
+        }
+
+        #usersaid {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            min-height: 50px;
+        }
+
+        #response {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            min-height: 50px;
+        }
+
+        audio {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Left side: User's speech input -->
+    <div class="container">
+        <h2>Hey Let's Talk...</h2>
+        <button onclick="startRecording()">Ask Your Doubt</button>
+        <div id="usersaid">You said: <span id="transcript"></span></div>
+    </div>
+
+    <!-- Right side: AI's response -->
+    <div class="container">
+        <h2>AI Response</h2>
+        <button onclick="generateResponse()">Generate</button>
+        <div id="response"></div>
+        <audio id="audioResponse" controls style="display: none;"></audio>
+    </div>
+
+    <script>
+        let userSpeech = "";
+
+        // Function to start recording speech
+        function startRecording() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Your browser doesn't support speech recognition. Please try Chrome.");
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = function(event) {
+                userSpeech = event.results[0][0].transcript;
+                document.getElementById("transcript").innerText = userSpeech;
+            };
+
+            recognition.onerror = function(event) {
+                alert("Error occurred: " + event.error);
+            };
+
+            recognition.start();
+        }
+
+        // Function to send speech to backend and get AI response
+        async function generateResponse() {
+            if (userSpeech === "") {
+                alert("Please record your speech first.");
+                return;
+            }
+
+            // Send speech to the backend with instruction
+            const response = await fetch('/generate-response', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ speech: userSpeech, instruction: "Don't provide asterisks. Only give a simple response." })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                const aiTextResponse = data.response;
+                const audioUrl = data.audio_url;
+
+                // Display AI response text
+                document.getElementById("response").innerText = aiTextResponse;
+
+                // Play the generated speech response
+                const audioElement = document.getElementById("audioResponse");
+                audioElement.style.display = "block";
+                audioElement.src = audioUrl;
+                audioElement.play();
+            }
+        }
+    </script>
+</body>
+</html>
