@@ -11,7 +11,7 @@
             display: flex;
             justify-content: space-between;
         }
-
+      
         .container {
             width: 45%;
             text-align: center;
@@ -110,7 +110,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ speech: userSpeech, instruction: "Don't provide asterisks. Only give a simple response." })
+                body: JSON.stringify({ speech: userSpeech, instruction: "Don't provide asterisks. Only give a short response to the users speech" })
             });
 
             const data = await response.json();
